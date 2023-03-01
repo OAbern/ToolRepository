@@ -1,10 +1,11 @@
 // ==UserScript==
 // @name         阿里云盘-批量修改文件名-剧集刮削
 // @namespace    http://tampermonkey.net/
-// @version      1.1
+// @version      2.0
 // @description  用于阿里云盘批量修改文件名，主要为剧集刮削准备
 // @author       wdwy
 // @match        https://www.aliyundrive.com/drive/folder/*
+// @match        https://www.aliyundrive.com/drive/
 // @icon         https://gw.alicdn.com/imgextra/i3/O1CN01aj9rdD1GS0E8io11t_!!6000000000620-73-tps-16-16.ico
 // @require      https://cdn.staticfile.org/jquery/3.6.0/jquery.min.js
 // @run-at       document-body
@@ -19,8 +20,75 @@
     var obj = {
         files: [],
         randomFillParam: -1,
-        url: location.href
+        url: location.href,
+        panel: 1
     };
+
+    var op1 = `
+        <div class="title--2bLle">剧集重命名</div>
+        <div class="wrap--2PdUw" >
+            <div class="container--30UDJ">
+                <div class="content--nfnm6" style="padding-left: 15px;padding-right: 15px;">
+
+                    <span style:"color:white">当前路径地址：</span>
+                    <input class="ant-input ant-input-borderless input--3oFR6 batch-path" type="text" value="" disabled>
+                    <br/><br/>
+
+                    <div class="group--20rOb" style="width:100%; text-align:center; padding:10px 5px;">
+                    修改前名字模板：
+                    <input style="margin-bottom:8px" class="ant-input ant-input-borderless input--3oFR6 batch-before" type="text" value="" placeholder="使用$$标记集数，例如: show-name_xxx_E$02$_xxx">
+                    <button class="button--2Aa4u primary--3AJe5 small---B8mi batch-randomFill">随机填充</button>
+                    </div>
+                    <br/><br/>
+
+                    <div class="group--20rOb" style="width:100%; text-align:center; padding:10px 5px;">
+                    修改后名字模板：
+                    <input class="ant-input ant-input-borderless input--3oFR6 batch-after" type="text" value="" placeholder="前缀，按照格式[剧名_S季], 例如: show-name_S01"><br/>
+                    <br/>
+                    <div style="display:flex; justify-content:center;">
+                        <div style="color:rgba(var(--context), 0.72); font-weight:normal">使用原始后缀</div>
+                        <input style="margin-left:3px" class="input--1mW1D batch-origin-suff" type="checkbox" readonly="" value="">
+                    </div>
+                    <input class="ant-input ant-input-borderless input--3oFR6 batch-after-suff" type="text" value="" placeholder="后缀，选填，影片参数信息，例如: 1080p_AAC">
+                    </div>
+                </div>
+                <div class="footer--1GqVx" style="display:flex; justify-content:center;">
+                    <button style="float:left" class="button--2Aa4u primary--3AJe5 small---B8mi batch-clear">清空</button>
+                    &nbsp&nbsp&nbsp&nbsp&nbsp
+                    <button class="button--2Aa4u warn--3AJe5 small---B8mi batch-modify">修改</button>
+                </div>
+            </div> <!-- container -->
+        </div> <!-- wrap -->
+    `;
+
+    var op2 = `
+        <div class="title--2bLle">查找替换</div>
+        <div class="wrap--2PdUw" >
+            <div class="container--30UDJ">
+                <div class="content--nfnm6" style="padding-left: 15px;padding-right: 15px;">
+
+                    <span style:"color:white">当前路径地址：</span>
+                    <input class="ant-input ant-input-borderless input--3oFR6 batch-path" type="text" value="" disabled>
+                    <br/><br/>
+
+                    <div class="group--20rOb" style="width:100%; text-align:center; padding:10px 5px;">
+                    查找
+                    <input style="margin-bottom:8px" class="ant-input ant-input-borderless input--3oFR6 batch-find" type="text" value="" placeholder="">
+                    <br/>
+                    替换为
+                    <input style="margin-bottom:8px" class="ant-input ant-input-borderless input--3oFR6 batch-replace" type="text" value="" placeholder="">
+                    </div>
+                    <br/><br/>
+
+                </div>
+                <div class="footer--1GqVx" style="display:flex; justify-content:center;">
+                    <button style="float:left" class="button--2Aa4u primary--3AJe5 small---B8mi batch-clear-2">清空</button>
+                    &nbsp&nbsp&nbsp&nbsp&nbsp
+                    <button class="button--2Aa4u warn--3AJe5 small---B8mi batch-modify-2">执行</button>
+                </div>
+            </div> <!-- container -->
+        </div> <!-- wrap -->
+    `;
  
     obj.reset = function () {
         obj.files = [];
@@ -84,67 +152,56 @@
         obj.pageScroll();
  
         var html = `
-            <div class="ant-modal-root ant-modal-batch-modify">
-                <div class="ant-modal-mask"></div>
-                <div tabindex="-1" class="ant-modal-wrap" role="dialog">
-                    <div role="document" class="ant-modal modal-wrapper--2yJKO" style="width: 666px;">
-                        <div class="ant-modal-content">
-                            <div class="ant-modal-header">
-                                <div class="ant-modal-title" id="rcDialogTitle1">扩展：批量重命名剧集</div>
+        <div class="ant-modal-root ant-modal-batch-modify">
+            <div class="ant-modal-mask" style="z-index: 999999;"></div>
+            <div tabindex="-1" class="ant-modal-wrap" role="dialog" style="z-index: 999999;">
+                <div role="document" class="ant-modal modal-wrapper--2yJKO" style="width: 800px; transform-origin: -119px 90px;">
+                    <div tabindex="0" aria-hidden="true" style="width: 0px; height: 0px; overflow: hidden; outline: none;"></div>
+                    <div class="ant-modal-content" style="height: 600px;">
+                        <div class="ant-modal-body" style="padding: 0px;">
+                            <div class="icon-wrapper--3dbbo">
+                                <span data-role="icon" data-render-as="svg" data-icon-type="PDSClose" class="close-icon--33bP0 icon--d-ejA ">
+                                    <svg viewBox="0 0 1024 1024">
+                                        <use xlink:href="#PDSClose"></use>
+                                    </svg>
+                                </span>
                             </div>
-                            <div class="ant-modal-body">
-                                <div class="icon-wrapper--3dbbo">
-                                    <span data-role="icon" data-render-as="svg" data-icon-type="PDSClose" class="close-icon--33bP0 icon--d-ejA ">
-                                        <svg viewBox="0 0 1024 1024">
-                                            <use xlink:href="#PDSClose"></use>
-                                        </svg>
-                                    </span>
-                                </div>
-                                <div class="content-wrapper--1_WJv" style="color:rgba(var(--context), 0.9); font-weight:bolder">
-                                    <!-- <div class="cover--2pw-Z">
-                                        <div class="file-cover--37ssA" data-size="XL">
-                                            <img alt="others" class="fileicon--2Klqk fileicon--vNn4M " draggable="false" src="https://img.alicdn.com/imgextra/i1/O1CN01NVSzRz25VFRGlsewQ_!!6000000007531-2-tps-140-140.png">
+        
+                            <div class="container--1nDnl" style="height: 600px;">
+                                <div class="sider--tpp_Q" style="width: 20%;padding-left: 10px;padding-right: 10px;">
+                                    <div class="title--2bLle">扩展：批量重命名</div>
+        
+                                    <div class="menu-item--1FkeH active--9DXNz" id="option1" style="width: auto">
+                                        <div class="menu-item__label--2IGDQ">
+                                         <span class="menu-item__text--23X0b">剧集重命名</span>
                                         </div>
-                                    </div> -->
- 
-                                    <span style:"color:white">当前路径地址：</span>
-                                    <input class="ant-input ant-input-borderless input--3oFR6 batch-path" type="text" value=""  disabled>
-                                    <br/><br/>
- 
- 
-                                    <div class="group--20rOb" style="width:100%; text-align:center; padding:10px 5px;">
-                                    修改前名字模板：
-                                    <input style="margin-bottom:8px" class="ant-input ant-input-borderless input--3oFR6 batch-before" type="text" value="" placeholder="使用$$标记集数，例如: show-name_xxx_E$02$_xxx">
-                                    <button class="button--2Aa4u primary--3AJe5 small---B8mi batch-randomFill">随机填充</button>
+                                        <span data-role="icon" data-render-as="svg" data-icon-type="PDSChevronRight" class="icon--2Ef46 icon--d-ejA ">
+                                         <svg viewbox="0 0 1024 1024">
+                                          <use xlink:href="#PDSChevronRight"></use>
+                                         </svg></span>
                                     </div>
-                                    <br/><br/>
- 
- 
-                                    <div class="group--20rOb" style="width:100%; text-align:center; padding:10px 5px;">
-                                    修改后名字模板：
-                                    <input class="ant-input ant-input-borderless input--3oFR6 batch-after" type="text" value="" placeholder="前缀，按照格式[剧名_S季], 例如: show-name_S01"><br/>
-                                    <br/>
-                                    <div style="display:flex; justify-content:center;">
-                                        <div style="color:rgba(var(--context), 0.72); font-weight:normal">使用原始后缀</div>
-                                        <input style="margin-left:3px" class="input--1mW1D batch-origin-suff" type="checkbox" readonly="" value="">
+                                    <div class="menu-item--1FkeH" style="width: auto" id="option2">
+                                        <div class="menu-item__label--2IGDQ">
+                                         <span class="menu-item__text--23X0b">查找替换</span>
+                                        </div>
+                                        <span data-role="icon" data-render-as="svg" data-icon-type="PDSChevronRight" class="icon--2Ef46 icon--d-ejA ">
+                                         <svg viewbox="0 0 1024 1024">
+                                          <use xlink:href="#PDSChevronRight"></use>
+                                         </svg></span>
                                     </div>
-                                    <input class="ant-input ant-input-borderless input--3oFR6 batch-after-suff" type="text" value="" placeholder="后缀，选填，影片参数信息，例如: 1080p_AAC">
-                                    </div>
-                                </div>
-                            </div>
-                            <br/>
-                            <div class="ant-modal-footer">
-                                <div class="footer--3Q0je" style="display:flex; justify-content:center;">
-                                    <button style="float:left" class="button--2Aa4u primary--3AJe5 small---B8mi batch-clear">清空</button>
-                                    &nbsp&nbsp&nbsp&nbsp&nbsp
-                                    <button class="button--2Aa4u warn--3AJe5 small---B8mi batch-modify">修改</button>
- 
-                                </div>
-                            </div>
+                                </div> <!-- sider -->
+        
+                                <div class="content--2tQXj batch-content-op" style="width: 80%; color:rgba(var(--context), 0.9); font-weight:bolder">
+                                `+op1+`
+                                </div> <!-- content -->
+                            </div> <!-- container -->
                         </div>
+                        <br/>
                     </div>
+                    <div tabindex="0" aria-hidden="true" style="width: 0px; height: 0px; overflow: hidden; outline: none;"></div>
                 </div>
             </div>
+        </div>
             `;
  
         $("body").append(html);
@@ -156,13 +213,27 @@
                 $(".ant-modal-batch-modify").remove();
             }
         });
+        $("#option1").on("click", 1, obj.switchPanel);
+        $("#option2").on("click", 2, obj.switchPanel);
+
+        obj.prepareOp1();
+        obj.panel = 1;
+    };
+
+    obj.prepareOp1 = function() {
         $(".batch-path").val(obj.path);
         $(".batch-clear").on("click", obj.clear);
         $(".batch-modify").on("click", obj.batchModify);
         $(".batch-randomFill").on("click", obj.randomFill);
         $(".batch-origin-suff").on("click", obj.changeOriSuff);
         $(".batch-before").on("blur", obj.checkBefore);
-    };
+    }
+
+    obj.prepareOp2 = function() {
+        $(".batch-path").val(obj.path);
+        $(".batch-clear-2").on("click", obj.clear2);
+        $(".batch-modify-2").on("click", obj.replace);
+    }
  
     obj.loading = function() {
         var html = `
@@ -232,6 +303,11 @@
         $(".batch-before").val("");
         $(".batch-after").val("");
         $(".batch-after-suff").val("");
+    };
+
+    obj.clear2 = function() {
+        $(".batch-find").val("");
+        $(".batch-replace").val("");
     };
  
     obj.disableButton = function() {
@@ -332,8 +408,54 @@
  
             setTimeout(function() {window.location.reload()}, 100);
         }, 0);
- 
- 
+    }
+
+    obj.replace = function() {
+        alert("replace");
+        let findTxt = $(".batch-find").val();
+        let replaceTxt = $(".batch-replace").val();
+        if(isBlank(findTxt)) {
+            alert("查找文本不能为空!");
+            return;
+        }
+
+        if(!isBlank(replaceTxt) && replaceTxt === findTxt) {
+            alert("查找和替换文本不能相同!");
+            return;
+        }
+
+        //解析token
+        let token = JSON.parse(localStorage.getItem("token"));
+        if(!token) {
+            alert("请先登录！");
+            obj.enableButton();
+            return;
+        }
+        let tokenStr = token.token_type + " " + token.access_token;
+
+        $(".ant-modal-batch-modify").remove();
+        obj.loading();
+        setTimeout(function() {
+            let count = 0;
+            for(let f of obj.files) {
+                //检查文件是否应该修改
+                if(count > 200) break;
+
+                let newName = f.name.replace(findTxt, replaceTxt);
+                if(isBlank(newName)) continue;
+                if(f.name === newName) continue;
+
+                //console.log(f.name + " -> " + newName);
+                obj.ajaxModify(f, newName, tokenStr);
+                count++;
+            }
+
+            $(".ant-modal-loading").remove();
+            alert("完成修改【"+count+"】个文件");
+
+            setTimeout(function() {window.location.reload()}, 100);
+        }, 0);
+
     }
  
     obj.ajaxModify = function(file, newName, token) {
@@ -382,7 +504,7 @@
         }
  
         if(flag) {
-            alert("没有vedio格式的文件！");
+            alert("没有video格式的文件！");
             return;
         }
  
@@ -407,6 +529,27 @@
         }
  
         var intervalId = setInterval(loopScroll, 600);
+    }
+
+    obj.switchPanel = function(event) {
+        var val = event.data;
+        if(obj.panel == val) return;
+
+        var content = $(".batch-content-op");
+        if(val == 1) {
+            $("#option1").attr("class", "menu-item--1FkeH active--9DXNz");
+            content.html(op1);
+            obj.prepareOp1();
+        }else if(val == 2){
+            $("#option2").attr("class", "menu-item--1FkeH active--9DXNz");
+            content.html(op2);
+            obj.prepareOp2();
+        }
+
+        if(obj.panel == 1) $("#option1").attr("class", "menu-item--1FkeH");
+        else if(obj.panel == 2) $("#option2").attr("class", "menu-item--1FkeH");
+
+        obj.panel = val;
     }
  
     obj.init();
