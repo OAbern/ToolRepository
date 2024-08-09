@@ -1,4 +1,4 @@
-如果喜欢，可以<img width="20" height="20" src="https://static.afdiancdn.com/static/img/logo/logo.png">[爱发电](https://afdian.net/a/WD_WangYe)支持作者
+如果喜欢，可以<img width="20" height="20" src="https://static.afdiancdn.com/static/img/logo/logo.png">[爱发电](https://afdian.com/a/WD_WangYe)支持作者
 
 # 阿里云盘文件批量重命名
 
@@ -21,6 +21,12 @@ v2.0+版本已支持所有类型文件修改；
 3. 限制单次最多操作200个文件；
 
 ### 更新记录
+
+#### 2024/8/09 @version 2.05
+- URL失效问题
+
+#### 2023/8/29 @version 2.04
+- URL失效问题
 
 #### 2023/8/14 @version 2.03
 - URL失效问题
