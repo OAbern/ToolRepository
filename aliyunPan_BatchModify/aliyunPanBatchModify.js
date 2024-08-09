@@ -1,13 +1,23 @@
 // ==UserScript==
 // @name         阿里云盘-批量修改文件名-剧集刮削
 // @namespace    http://tampermonkey.net/
-// @version      2.03
+// @version      2.05
 // @description  用于阿里云盘批量修改文件名，主要为剧集刮削准备
 // @author       wdwy
 // @match        https://www.aliyundrive.com/drive/folder/*
-// @match        https://www.aliyundrive.com/drive/
+// @match        https://www.aliyundrive.com/drive/*
 // @match        https://www.aliyundrive.com/drive/legacy/folder/*
 // @match        https://www.aliyundrive.com/drive/legacy/
+// @match        https://www.aliyundrive.com/drive/file/backup/*
+// @match        https://www.aliyundrive.com/drive/file/backup/
+// @match        https://www.aliyundrive.com/drive/file/*
+// @match        https://www.alipan.com/drive/folder/*
+// @match        https://www.alipan.com/drive/*
+// @match        https://www.alipan.com/drive/legacy/folder/*
+// @match        https://www.alipan.com/drive/legacy/
+// @match        https://www.alipan.com/drive/file/backup/*
+// @match        https://www.alipan.com/drive/file/backup/
+// @match        https://www.alipan.com/drive/file/*
 // @icon         https://gw.alicdn.com/imgextra/i3/O1CN01aj9rdD1GS0E8io11t_!!6000000000620-73-tps-16-16.ico
 // @require      https://cdn.staticfile.org/jquery/3.6.0/jquery.min.js
 // @run-at       document-body
